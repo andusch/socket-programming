@@ -32,31 +32,20 @@ int main() {
     return 1;
   }
 
-  if (listen(serverSocket, 5) < 0) {
-    perror("listen failed");
-    return 1;
-  }
-
   std::cout << "Server listening on port " << PORT << "...\n";
 
-  int clientSocket = accept(serverSocket, nullptr, nullptr);
-  if (clientSocket < 0) {
-    perror("accept failed");
-    close(serverSocket);
-    return 1;
-  }
-
   char buffer[1024] = {0};
-  ssize_t bytes = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+  sockaddr_in clientAddr{};
+  socklen_t clientLen = sizeof(clientAddr);
+
+  ssize_t bytes = recvfrom(serverSocket, buffer, sizeof(buffer) - 1, 0,
+                           (struct sockaddr *)&clientAddr, &clientLen);
+
   if (bytes > 0) {
+    buffer[bytes] = '\0';
     std::cout << "Message from client: " << buffer << '\n';
-  } else if (bytes == 0) {
-    std::cout << "Client disconnected\n";
-  } else {
-    perror("recv failed");
   }
 
-  close(clientSocket);
   close(serverSocket);
 
   return 0;
